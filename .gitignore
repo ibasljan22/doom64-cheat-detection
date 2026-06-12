@@ -1,0 +1,60 @@
+# ===== Build artefakti =====
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+*.exe
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.log
+*.tlog
+*.lastbuildstate
+*.user
+.vs/
+*.aps
+*.ipch
+*.sdf
+*.opensdf
+*.cachefile
+*.VC.db
+*.VC.opendb
+
+# ===== Dependencies (preveliko / tudje biblioteke) =====
+deps/vcpkg/
+deps/fmod/
+thirdparty/Libs/
+thirdparty/Includes/
+
+# ===== Game assets (copyright - NE SMIJU na repo) =====
+*.WAD
+*.wad
+*.DLS
+*.dls
+DOOM64.WAD
+DOOMSND.DLS
+
+# ===== FMOD (komercijalni SDK) =====
+fmod*.dll
+fmod*.lib
+*.dll
+
+# ===== AI - veliki podaci i modeli (opcionalno) =====
+# Otkomentiraj ako ne zelis uploadati CSV i model
+# AI/data/
+# AI/*.csv
+# *.pkl
+
+# ===== Python =====
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+desktop.ini
