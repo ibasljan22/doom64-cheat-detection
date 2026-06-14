@@ -1,12 +1,11 @@
 """
-detect_cheats.py (v7 - hibridni pristup s damage_attempts/shots_fired)
-Kombinira:
-1. Session-level pravila (tvrdi dokazi) - koriste damage_attempts i shots_fired
-2. ML model (Random Forest) na prozorima - za granularnu analizu
+detect_cheats.py (v8 - Random Forest odlucuje, pravila kao sigurnosna provjera)
 
-Tvrdi signali rjesavaju edge-case scenarije:
-- Vjesti igrac koji ne prima damage: damage_attempts=0 -> NIJE godmode
-- Chainsaw igra: shots_fired=0 -> NIJE infammo
+Promjena filozofije od v7:
+- RANDOM FOREST donosi konacnu odluku (vecinsko glasanje po prozorima)
+- Session-level pravila su SADA samo SIGURNOSNA PROVJERA:
+  ako se model i tvrdi dokazi NE slazu, ispisuje se upozorenje za rucnu provjeru.
+Time je ML model primarni mehanizam detekcije, a pravila sluze kao kontrola kvalitete.
 """
 
 import pandas as pd
@@ -48,6 +47,8 @@ def extract_window_features(chunk):
         'distance_total': chunk['distance_delta'].sum(),
         'health_std': chunk['health'].std() if len(chunk) > 1 else 0,
         'ammo_total_std': total_ammo.std() if len(chunk) > 1 else 0,
+        'has_damage_no_health_loss': 1 if (damage_attempts > 0 and health_drops == 0) else 0,
+        'has_shots_no_ammo_loss': 1 if (shots_fired > 5 and ammo_drops == 0) else 0,
     }
 
 
@@ -60,38 +61,23 @@ def windowize(df, window_size):
     return pd.DataFrame(rows)
 
 
-def session_level_check(df):
-    """Tvrdi dokazi cheatova na razini cijele sesije."""
-    n_attacks = int((df['attack_down'] == 1).sum())
+def safety_check(df):
+    """SIGURNOSNA PROVJERA - tvrdi dokazi za usporedbu s ML odlukom (ne odlucuje sama)."""
     health_drops = int((df['health_delta'] < 0).sum())
     ammo_drops = int(((df['ammo_bullets_delta'] < 0) | (df['ammo_shells_delta'] < 0) |
                       (df['ammo_cells_delta'] < 0) | (df['ammo_rockets_delta'] < 0)).sum())
     damage_attempts = int(df['damage_attempts'].sum())
     shots_fired = int(df['shots_fired'].sum())
     speed_max = df['speed'].max()
-    high_speed_count = int((df['speed'] > 25).sum())
 
-    return {
-        'damage_attempts': damage_attempts,
-        'health_drops': health_drops,
-        'shots_fired': shots_fired,
-        'ammo_drops': ammo_drops,
-        'speed_max': speed_max,
-        'high_speed_count': high_speed_count,
-        'attacks': n_attacks,
-
-        # === TVRDI SIGNALI ===
-        # God mode: neprijatelj te napadao (damage_attempts) ali health nije pao
-        # Ako damage_attempts=0 (nitko te nije napao), NEMA dokaza za godmode
-        'godmode_proven': damage_attempts >= 10 and health_drops == 0,
-
-        # Infinite ammo: ispalio hice oruzjem koje trosi ammo, ali ammo nije pao
-        # Ako shots_fired=0 (samo chainsaw), NEMA dokaza za infammo
-        'infammo_proven': shots_fired >= 20 and ammo_drops == 0,
-
-        # Speedhack: brzina iznad fizickog maksimuma normalne igre
-        'speedhack_proven': speed_max > 30 or high_speed_count > 50,
-    }
+    signals = []
+    if speed_max > 30:
+        signals.append('speedhack')
+    if damage_attempts >= 10 and health_drops == 0:
+        signals.append('godmode')
+    if shots_fired >= 20 and ammo_drops == 0:
+        signals.append('infammo')
+    return signals
 
 
 def detect(csv_file):
@@ -100,60 +86,74 @@ def detect(csv_file):
     saved = joblib.load(MODEL_FILE)
     model = saved['model']
     features = saved['features']
-    window_size = saved.get('window_size', 100)
+    window_size = saved.get('window_size', 200)
 
     df = pd.read_csv(csv_file)
     print(f"Ucitano {len(df)} tickova")
 
     if len(df) < window_size:
-        print(f"Premalo podataka (potrebno {window_size}+)")
+        print(f"Premalo podataka (potrebno {window_size}+ tickova)")
         return
 
     df = df.sort_values('tick').reset_index(drop=True)
 
-    # === Session-level (tvrdi dokazi) ===
-    s = session_level_check(df)
-    print(f"\n=== Analiza cijele sesije ===")
-    print(f"  Damage attempts (napadi na igraca): {s['damage_attempts']}")
-    print(f"  Health drops (stvarno izgubljen health): {s['health_drops']}")
-    print(f"  Shots fired (hici oruzjem s ammo): {s['shots_fired']}")
-    print(f"  Ammo drops (stvarno potrosen ammo): {s['ammo_drops']}")
-    print(f"  Max brzina: {s['speed_max']:.1f}")
-
-    # === ML predikcije (granularno) ===
+    # === RANDOM FOREST - primarna odluka ===
     windows = windowize(df, window_size)
     X = windows[features].fillna(0)
     predictions = model.predict(X)
+    probabilities = model.predict_proba(X)
     windows['predicted_label'] = predictions
 
-    print(f"\n=== ML predikcije ({len(windows)} prozora) ===")
+    print(f"\n=== Random Forest predikcije ({len(windows)} prozora) ===")
     pred_counts = pd.Series(predictions).value_counts()
     for label, count in pred_counts.items():
-        print(f"  {label:12} {count:3} ({100*count/len(predictions):.0f}%)")
+        pct = 100 * count / len(predictions)
+        print(f"  {label:12} {count:3} ({pct:.0f}%)")
 
-    # === KONACNA ODLUKA (tvrdi dokazi imaju prioritet) ===
-    print(f"\n=== Konacna ocjena ===")
-    detected = []
-    if s['speedhack_proven']:
-        detected.append(('speedhack', f"max brzina {s['speed_max']:.1f} (prag 30)"))
-    if s['godmode_proven']:
-        detected.append(('godmode', f"{s['damage_attempts']} napada na igraca, 0 izgubljenog healtha"))
-    if s['infammo_proven']:
-        detected.append(('infammo', f"{s['shots_fired']} ispaljenih hitaca, 0 potrosenog ammo"))
+    # Prosjecna pouzdanost modela za pobjednicku klasu
+    classes = list(model.classes_)
+    avg_conf = probabilities.max(axis=1).mean()
 
-    if detected:
-        for cheat, reason in detected:
-            print(f"=> DETEKTIRANO VARANJE: {cheat.upper()}")
-            print(f"   Dokaz: {reason}")
+    # KONACNA ODLUKA = vecinsko glasanje Random Foresta
+    rf_decision = pred_counts.idxmax()
+    rf_decision_pct = 100 * pred_counts.iloc[0] / len(predictions)
+
+    print(f"\n=== ODLUKA MODELA (Random Forest) ===")
+    print(f"Prosjecna pouzdanost modela: {avg_conf:.1%}")
+
+    if rf_decision == 'normal':
+        print(f"=> CISTA IGRA")
+        print(f"   Random Forest je klasificirao {rf_decision_pct:.0f}% prozora kao normalnu igru.")
     else:
-        # Nema tvrdih dokaza - oslon na ML
-        normal_pct = 100 * pred_counts.get('normal', 0) / len(predictions)
-        if normal_pct >= 60:
-            print(f"=> CISTA IGRA ({normal_pct:.0f}% prozora normalno, nema tvrdih dokaza cheata)")
+        print(f"=> DETEKTIRANO VARANJE: {rf_decision.upper()}")
+        print(f"   Random Forest je klasificirao {rf_decision_pct:.0f}% prozora kao '{rf_decision}'.")
+
+    # === SIGURNOSNA PROVJERA (pravila) ===
+    safety_signals = safety_check(df)
+    print(f"\n=== Sigurnosna provjera (tvrdi dokazi) ===")
+    if safety_signals:
+        print(f"   Pravila ukazuju na: {', '.join(safety_signals)}")
+    else:
+        print(f"   Pravila ne nalaze tvrde dokaze cheata.")
+
+    # Usporedba ML odluke i pravila
+    rf_says_cheat = (rf_decision != 'normal')
+    rules_say_cheat = (len(safety_signals) > 0)
+
+    if rf_says_cheat and rules_say_cheat:
+        if rf_decision in safety_signals:
+            print(f"   [OK] Model i pravila se slazu ({rf_decision}).")
         else:
-            most = pred_counts.idxmax()
-            print(f"=> SUMNJIVO (ML ukazuje na '{most}', ali nema tvrdih dokaza)")
-            print(f"   Preporuka: rucna provjera")
+            print(f"   [UPOZORENJE] Model kaze '{rf_decision}', pravila kazu '{safety_signals}'.")
+            print(f"   Preporuka: rucna provjera.")
+    elif rf_says_cheat and not rules_say_cheat:
+        print(f"   [UPOZORENJE] Model detektira '{rf_decision}' ali nema tvrdih dokaza.")
+        print(f"   Moguc lazni alarm - preporuka rucne provjere.")
+    elif not rf_says_cheat and rules_say_cheat:
+        print(f"   [UPOZORENJE] Model kaze cisto, ali pravila nalaze {safety_signals}.")
+        print(f"   Moguce da je model promasio - preporuka rucne provjere.")
+    else:
+        print(f"   [OK] Model i pravila se slazu (cista igra).")
 
     output_file = csv_file.replace('.csv', '_predictions.csv')
     windows.to_csv(output_file, index=False)

@@ -1,8 +1,8 @@
 """
-train_model.py (v7 - koristi damage_attempts i shots_fired)
-Trenira Random Forest klasifikator s window-based znacajkama.
-Glavna novost: koristi damage_attempts i shots_fired koji omogucuju
-razlikovanje pravih cheatova od legitimnih edge-case scenarija.
+train_model.py (v8 - Random Forest kao primarni klasifikator)
+Window-based Random Forest s prosirenim feature setom ukljucujuci
+binarne indikatore cheat-signatura. Veci prozor (200 tickova ~30s) daje
+modelu vecu sansu da uhvati kljucne dogadjaje (napad na igraca, pucanje).
 """
 
 import pandas as pd
@@ -18,7 +18,7 @@ from sklearn.metrics import (
 
 INPUT_FILE = 'training_dataset.csv'
 MODEL_FILE = 'cheat_detector_model.pkl'
-WINDOW_SIZE = 100  # tickova po prozoru (~15 sek)
+WINDOW_SIZE = 200  # tickova po prozoru (~30 sekundi)
 
 
 def extract_window_features(chunk):
@@ -32,12 +32,10 @@ def extract_window_features(chunk):
                       (chunk['ammo_shells_delta'] < 0) |
                       (chunk['ammo_cells_delta'] < 0) |
                       (chunk['ammo_rockets_delta'] < 0)).sum())
-
-    # NOVE kljucne znacajke
     damage_attempts = int(chunk['damage_attempts'].sum())
     shots_fired = int(chunk['shots_fired'].sum())
 
-    features = {
+    return {
         # === Brzina (speedhack) ===
         'speed_max': chunk['speed'].max(),
         'speed_mean': chunk['speed'].mean(),
@@ -45,19 +43,15 @@ def extract_window_features(chunk):
         'high_speed_ratio': (chunk['speed'] > 25).sum() / len(chunk),
 
         # === God mode signatura ===
-        # Kljucno: damage_attempts > 0 ali health ne pada
         'damage_attempts': damage_attempts,
         'health_drops': health_drops,
-        # Omjer: koliko damage-a je "upijeno" bez gubitka healtha
         'damage_absorbed_ratio': (
             (damage_attempts - health_drops) / max(damage_attempts, 1)
         ) if damage_attempts > 0 else 0,
 
         # === Infinite ammo signatura ===
-        # Kljucno: shots_fired > 0 ali ammo ne pada
         'shots_fired': shots_fired,
         'ammo_drops': ammo_drops,
-        # Omjer: koliko hitaca je ispaljeno bez gubitka ammo
         'shots_without_ammo_loss_ratio': (
             (shots_fired - ammo_drops) / max(shots_fired, 1)
         ) if shots_fired > 0 else 0,
@@ -67,8 +61,13 @@ def extract_window_features(chunk):
         'distance_total': chunk['distance_delta'].sum(),
         'health_std': chunk['health'].std() if len(chunk) > 1 else 0,
         'ammo_total_std': total_ammo.std() if len(chunk) > 1 else 0,
+
+        # === Binarni indikatori (jaki signali za model) ===
+        # Bilo napada na igraca, ali health nije pao -> god mode signatura
+        'has_damage_no_health_loss': 1 if (damage_attempts > 0 and health_drops == 0) else 0,
+        # Pucao oruzjem s ammo, ali ammo nije pao -> infinite ammo signatura
+        'has_shots_no_ammo_loss': 1 if (shots_fired > 5 and ammo_drops == 0) else 0,
     }
-    return features
 
 
 def windowize(df, window_size):
@@ -90,7 +89,7 @@ def train():
 
     df = df.sort_values(['label', 'tick']).reset_index(drop=True)
 
-    print(f"\nDijelim na prozore od {WINDOW_SIZE} tickova...")
+    print(f"\nDijelim na prozore od {WINDOW_SIZE} tickova (~30 sek)...")
     windows_dfs = []
     for label in df['label'].unique():
         sub = df[df['label'] == label].copy()
@@ -141,7 +140,6 @@ def train():
     print("\n=== Vaznost znacajki ===")
     print(importances.to_string(index=False))
 
-    # Grafovi
     fig, ax = plt.subplots(figsize=(8, 6))
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
     disp.plot(ax=ax, cmap='Blues', values_format='d')
