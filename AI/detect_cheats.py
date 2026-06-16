@@ -1,10 +1,8 @@
 """
-detect_cheats.py (v8 - Random Forest odlucuje, pravila kao sigurnosna provjera)
 
-Promjena filozofije od v7:
-- RANDOM FOREST donosi konacnu odluku (vecinsko glasanje po prozorima)
-- Session-level pravila su SADA samo SIGURNOSNA PROVJERA:
-  ako se model i tvrdi dokazi NE slazu, ispisuje se upozorenje za rucnu provjeru.
+RANDOM FOREST donosi konacnu odluku (vecinsko glasanje po prozorima)
+Session-level pravila su SADA samo SIGURNOSNA PROVJERA:
+ako se model i tvrdi dokazi NE slazu, ispisuje se upozorenje za rucnu provjeru.
 Time je ML model primarni mehanizam detekcije, a pravila sluze kao kontrola kvalitete.
 """
 
@@ -97,7 +95,7 @@ def detect(csv_file):
 
     df = df.sort_values('tick').reset_index(drop=True)
 
-    # === RANDOM FOREST - primarna odluka ===
+    #Random forest - primarna odluka
     windows = windowize(df, window_size)
     X = windows[features].fillna(0)
     predictions = model.predict(X)
@@ -110,11 +108,11 @@ def detect(csv_file):
         pct = 100 * count / len(predictions)
         print(f"  {label:12} {count:3} ({pct:.0f}%)")
 
-    # Prosjecna pouzdanost modela za pobjednicku klasu
+    #Prosjecna pouzdanost modela za pobjednicku klasu
     classes = list(model.classes_)
     avg_conf = probabilities.max(axis=1).mean()
 
-    # KONACNA ODLUKA = vecinsko glasanje Random Foresta
+    #Konacna odluka -vecinsko glasanje Random Foresta
     rf_decision = pred_counts.idxmax()
     rf_decision_pct = 100 * pred_counts.iloc[0] / len(predictions)
 
@@ -128,7 +126,7 @@ def detect(csv_file):
         print(f"=> DETEKTIRANO VARANJE: {rf_decision.upper()}")
         print(f"   Random Forest je klasificirao {rf_decision_pct:.0f}% prozora kao '{rf_decision}'.")
 
-    # === SIGURNOSNA PROVJERA (pravila) ===
+    #Sigurnosna provjera po pravilima
     safety_signals = safety_check(df)
     print(f"\n=== Sigurnosna provjera (tvrdi dokazi) ===")
     if safety_signals:
@@ -136,7 +134,7 @@ def detect(csv_file):
     else:
         print(f"   Pravila ne nalaze tvrde dokaze cheata.")
 
-    # Usporedba ML odluke i pravila
+    #Usporedba ML odluke i pravila
     rf_says_cheat = (rf_decision != 'normal')
     rules_say_cheat = (len(safety_signals) > 0)
 

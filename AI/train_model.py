@@ -1,8 +1,6 @@
 """
-train_model.py (v8 - Random Forest kao primarni klasifikator)
-Window-based Random Forest s prosirenim feature setom ukljucujuci
-binarne indikatore cheat-signatura. Veci prozor (200 tickova ~30s) daje
-modelu vecu sansu da uhvati kljucne dogadjaje (napad na igraca, pucanje).
+Window-based Random Forest s prosirenim feature setom.
+Veci prozor dajemodelu vecu sansu da uhvati kljucne dogadaje.
 """
 
 import pandas as pd
@@ -18,7 +16,7 @@ from sklearn.metrics import (
 
 INPUT_FILE = 'training_dataset.csv'
 MODEL_FILE = 'cheat_detector_model.pkl'
-WINDOW_SIZE = 200  # tickova po prozoru (~30 sekundi)
+WINDOW_SIZE = 200  #tickova po prozoru (~30 sekundi)
 
 
 def extract_window_features(chunk):
@@ -36,36 +34,36 @@ def extract_window_features(chunk):
     shots_fired = int(chunk['shots_fired'].sum())
 
     return {
-        # === Brzina (speedhack) ===
+        #Brzina (speedhack)
         'speed_max': chunk['speed'].max(),
         'speed_mean': chunk['speed'].mean(),
         'speed_std': chunk['speed'].std() if len(chunk) > 1 else 0,
         'high_speed_ratio': (chunk['speed'] > 25).sum() / len(chunk),
 
-        # === God mode signatura ===
+        #Godmode cheat
         'damage_attempts': damage_attempts,
         'health_drops': health_drops,
         'damage_absorbed_ratio': (
             (damage_attempts - health_drops) / max(damage_attempts, 1)
         ) if damage_attempts > 0 else 0,
 
-        # === Infinite ammo signatura ===
+        #Infinite ammo cheat
         'shots_fired': shots_fired,
         'ammo_drops': ammo_drops,
         'shots_without_ammo_loss_ratio': (
             (shots_fired - ammo_drops) / max(shots_fired, 1)
         ) if shots_fired > 0 else 0,
 
-        # === Opcenite aktivnosti ===
+        #Opcenito
         'attacks': n_attacks,
         'distance_total': chunk['distance_delta'].sum(),
         'health_std': chunk['health'].std() if len(chunk) > 1 else 0,
         'ammo_total_std': total_ammo.std() if len(chunk) > 1 else 0,
 
-        # === Binarni indikatori (jaki signali za model) ===
-        # Bilo napada na igraca, ali health nije pao -> god mode signatura
+        #Binarni indikatori
+        #Bilo napada na igraca, ali health nije pao - godmode cheat
         'has_damage_no_health_loss': 1 if (damage_attempts > 0 and health_drops == 0) else 0,
-        # Pucao oruzjem s ammo, ali ammo nije pao -> infinite ammo signatura
+        #Pucao oruzjem s ammo, ali ammo nije pao - infinite ammo cheat
         'has_shots_no_ammo_loss': 1 if (shots_fired > 5 and ammo_drops == 0) else 0,
     }
 
