@@ -1,7 +1,7 @@
 // cheat_logger.c
-// Logging sustav za prikupljanje gameplay podataka
-// Zapisuje CSV datoteku s podacima o igracu svaki game tick
-// Podaci se koriste za treniranje Random Forest modela
+//Logging sustav za prikupljanje gameplay podataka
+//Zapisuje CSV datoteku s podacima o igracu svaki game tick
+//Podaci se koriste za treniranje Random Forest modela
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,28 +17,26 @@ static int lastAmmo[4] = { 0, 0, 0, 0 };
 static fixed_t lastX = 0;
 static fixed_t lastY = 0;
 static fixed_t lastZ = 0;
-static int logInterval = 5;  // logiranje svakih 5 tickova (oko 7 puta/sec)
+static int logInterval = 5;  //logiranje svakih 5 tickova (oko 7 puta/sec)
 static int tickCounter = 0;
-static int isFirstLog = 1;   // za preskakanje delta racunanja u prvom logu
+static int isFirstLog = 1;   //za preskakanje delta racunanja u prvom logu
 
-// Globalni brojaci (definicija)
+//Globalni brojaci (definicija)
 int g_damageAttempts = 0;
 int g_shotsFired = 0;
 
-// Zadnje vrijednosti za delta izracun
+//Zadnje vrijednosti za delta izracun
 static int lastDamageAttempts = 0;
 static int lastShotsFired = 0;
 
-//
-// CL_Init
-// Otvara CSV datoteku i zapisuje header red
-//
+
+//CL_Init
+//Otvara CSV datoteku i zapisuje header red
 void CL_Init(void) {
     char filename[256];
     time_t t = time(NULL);
     struct tm* tm_info = localtime(&t);
 
-    // Kreiraj ime datoteke s timestampom
     strftime(filename, sizeof(filename), "gameplay_log_%Y%m%d_%H%M%S.csv", tm_info);
 
     logFile = fopen(filename, "w");
@@ -46,11 +44,11 @@ void CL_Init(void) {
         return;
     }
 
-    // Reset stanja za novi log
+    //Resetiranje stanja za novi log
     isFirstLog = 1;
     tickCounter = 0;
 
-    // CSV header
+    //CSV header
     fprintf(logFile,
         "tick,"
         "health,"
@@ -87,11 +85,9 @@ void CL_Init(void) {
     fflush(logFile);
 }
 
-//
-// CL_ApplyCheats
-// Primjenjuje efekte za infinite ammo i speedhack cheatove
-// Poziva se iz P_Ticker prije CL_LogTick
-//
+//CL_ApplyCheats
+//Primjenjuje efekte za infinite ammo i speedhack cheatove
+//Poziva se iz P_Ticker prije CL_LogTick
 void CL_ApplyCheats(player_t* player) {
     int i;
     fixed_t maxMom;
@@ -101,28 +97,26 @@ void CL_ApplyCheats(player_t* player) {
         return;
     }
 
-    // Infinite ammo: drzi sve municije na maksimumu
+    //Infinite ammo: ammo se ne koristi kod pucanja
     if (player->cheats & CF_INFAMMO) {
         for (i = 0; i < NUMAMMO; i++) {
             player->ammo[i] = player->maxammo[i];
         }
     }
 
-    // Speed hack: 1.5x brzina ali samo kad igrac aktivno pritisce tipke
-    // Bez ovoga frikcija ne moze stici multiplier i igrac se beskonacno krece
+    //Speed hack: 1.5x brzina
     if (player->cheats & CF_SPEEDHACK) {
-        // Provjeri pritisce li igrac tipku za kretanje
+        //Provjera pritisce li igrac tipku za kretanje
         isMoving = (player->cmd.forwardmove != 0) || (player->cmd.sidemove != 0);
 
         if (isMoving) {
-            // Maksimalni momentum (cap)
+            //Maksimalni momentum
             maxMom = 35 * FRACUNIT;
 
-            // Mnozenje s 1.5x
             player->mo->momx = (player->mo->momx * 3) / 2;
             player->mo->momy = (player->mo->momy * 3) / 2;
 
-            // Cap da se ne probija kroz zidove
+            //Limit postavljen da se ne probija kroz zidove
             if (player->mo->momx > maxMom)  player->mo->momx = maxMom;
             if (player->mo->momx < -maxMom) player->mo->momx = -maxMom;
             if (player->mo->momy > maxMom)  player->mo->momy = maxMom;
@@ -131,10 +125,8 @@ void CL_ApplyCheats(player_t* player) {
     }
 }
 
-//
-// CL_LogTick
-// Zapisuje jedan red podataka u CSV
-//
+//CL_LogTick
+//Zapisuje jedan red podataka u CSV
 void CL_LogTick(player_t* player, int gametic) {
     fixed_t dx, dy, dz;
     double speed, distance;
@@ -152,17 +144,17 @@ void CL_LogTick(player_t* player, int gametic) {
         return;
     }
 
-    // Logiranje svakih N tickova za smanjenje velicine datoteke
+    //Logiranje svakih N tickova za smanjenje velicine datoteke
     tickCounter++;
     if (tickCounter < logInterval) {
         return;
     }
     tickCounter = 0;
 
-    // Trenutni health (iz mobj-a za tocnu vrijednost tijekom igre)
+    //Trenutni health
     currentHealth = player->mo->health;
 
-    // Trenutni ammo
+    //Trenutni ammo
     for (i = 0; i < 4; i++) {
         if (i < NUMAMMO) {
             currentAmmo[i] = player->ammo[i];
@@ -172,7 +164,7 @@ void CL_LogTick(player_t* player, int gametic) {
         }
     }
 
-    // Prvi log: nemamo prethodne vrijednosti, postavi ih i preskoci delte
+    //Prvi log: nemamo prethodne vrijednosti, postavi ih i preskoci delte
     if (isFirstLog) {
         lastHealth = currentHealth;
         for (i = 0; i < 4; i++) {
@@ -186,63 +178,62 @@ void CL_LogTick(player_t* player, int gametic) {
         isFirstLog = 0;
     }
 
-    // Izracunaj delta vrijednosti
+    //Izracun delta vrijednosti
     healthDelta = currentHealth - lastHealth;
 
     for (i = 0; i < 4; i++) {
         ammoDelta[i] = currentAmmo[i] - lastAmmo[i];
     }
 
-    // Izracunaj brzinu iz momenta (momentum)
+    //Izracun brzine iz momenta
     dx = player->mo->momx;
     dy = player->mo->momy;
     dz = player->mo->momz;
 
-    // Brzina kao apsolutna vrijednost momenta
     speed = sqrt(
         ((double)dx / FRACUNIT) * ((double)dx / FRACUNIT) +
         ((double)dy / FRACUNIT) * ((double)dy / FRACUNIT) +
         ((double)dz / FRACUNIT) * ((double)dz / FRACUNIT)
     );
 
-    // Udaljenost od zadnje pozicije
+    //Udaljenost od zadnje pozicije
     distance = sqrt(
         ((double)(player->mo->x - lastX) / FRACUNIT) * ((double)(player->mo->x - lastX) / FRACUNIT) +
         ((double)(player->mo->y - lastY) / FRACUNIT) * ((double)(player->mo->y - lastY) / FRACUNIT)
     );
 
-    // Zapisi CSV red
+    //Zapisi CSV red
     fprintf(logFile,
-        "%d,"       // tick
-        "%d,"       // health
-        "%d,"       // armor
-        "%d,"       // ammo_bullets
-        "%d,"       // ammo_shells
-        "%d,"       // ammo_cells
-        "%d,"       // ammo_rockets
-        "%d,"       // pos_x (fixed point)
-        "%d,"       // pos_y
-        "%d,"       // pos_z
-        "%d,"       // mom_x
-        "%d,"       // mom_y
-        "%d,"       // mom_z
-        "%.4f,"     // speed
-        "%d,"       // health_delta
-        "%d,"       // ammo_bullets_delta
-        "%d,"       // ammo_shells_delta
-        "%d,"       // ammo_cells_delta
-        "%d,"       // ammo_rockets_delta
-        "%.4f,"     // distance_delta
-        "%d,"       // damage_count
-        "%d,"       // attack_down
-        "%d,"       // cheats_flag
-        "%d,"       // god_mode
-        "%d,"       // noclip
-        "%d,"       // infinite_ammo
-        "%d,"       // speedhack
-        "%d,"       // damage_attempts (delta)
-        "%d,"       // shots_fired (delta)
-        "%d\n",     // player_state
+        "%d,"       //tick
+        "%d,"       //health
+        "%d,"       //armor
+        "%d,"       //ammo_bullets
+        "%d,"       //ammo_shells
+        "%d,"       //ammo_cells
+        "%d,"       //ammo_rockets
+        "%d,"       //pos_x (fixed point)
+        "%d,"       //pos_y
+        "%d,"       //pos_z
+        "%d,"       //mom_x
+        "%d,"       //mom_y
+        "%d,"       //mom_z
+        "%.4f,"     //speed
+        "%d,"       //health_delta
+        "%d,"       //ammo_bullets_delta
+        "%d,"       //ammo_shells_delta
+        "%d,"       //ammo_cells_delta
+        "%d,"       //ammo_rockets_delta
+        "%.4f,"     //distance_delta
+        "%d,"       //damage_count
+        "%d,"       //attack_down
+        "%d,"       //cheats_flag
+        "%d,"       //god_mode
+        "%d,"       //noclip
+        "%d,"       //infinite_ammo
+        "%d,"       //speedhack
+        "%d,"       //damage_attempts (delta)
+        "%d,"       //shots_fired (delta)
+        "%d\n",     //player_state
         gametic,
         currentHealth,
         player->armorpoints,
@@ -275,7 +266,7 @@ void CL_LogTick(player_t* player, int gametic) {
         (int)player->playerstate
     );
 
-    // Spremi zadnje vrijednosti za delta izracun
+    //Spremamnje zadnje vrijednosti za delta izracun
     lastHealth = currentHealth;
     for (i = 0; i < 4; i++) {
         lastAmmo[i] = currentAmmo[i];
@@ -286,16 +277,14 @@ void CL_LogTick(player_t* player, int gametic) {
     lastDamageAttempts = g_damageAttempts;
     lastShotsFired = g_shotsFired;
 
-    // Flush svakih 100 zapisa
+    //Flush svakih 100 zapisa
     if ((gametic / logInterval) % 100 == 0) {
         fflush(logFile);
     }
 }
 
-//
-// CL_Close
-// Zatvara log datoteku
-//
+//CL_Close
+//Zatvaramo log datoteku
 void CL_Close(void) {
     if (logFile) {
         fflush(logFile);
