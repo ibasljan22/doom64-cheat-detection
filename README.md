@@ -8,7 +8,7 @@ temeljen na analizi gameplay podataka pomocu strojnog ucenja (Random Forest).
 Sustav detektira tri oblika varanja:
 - **God mode** - igrac prima napade ali ne gubi health
 - **Infinite ammo** - igrac puca ali ne trosi municiju
-- **Speed hack** - igrac se krece nenormalno brzo
+- **Speed hack** - igrac se krece jako brzo, brze od default brzine u igri
 
 Projekt je izgradjen na [Doom64EX-Plus](https://github.com/atsb/Doom64EX-Plus)
 engineu, koji je prosiren logging sustavom za prikupljanje gameplay podataka.
@@ -28,8 +28,8 @@ engineu, koji je prosiren logging sustavom za prikupljanje gameplay podataka.
     ├── merge_logs.py          # Spaja vise CSV logova
     ├── prepare_data.py        # Priprema dataset s labelama
     ├── train_model.py         # Trenira Random Forest model
-    ├── detect_cheats.py       # Detekcija na snimljenom logu
-    ├── realtime_monitor.py    # Detekcija u stvarnom vremenu
+    ├── detect_cheats_ai.py    # Detekcija varanja na cijeloj sesiji
+    ├── detect_cheats_ai_segments.py  # Detekcija varanja na segmentima
     ├── data/                  # Prikupljeni gameplay podaci (CSV)
     └── cheat_detector_model.pkl  # Istrenirani model
 ```
