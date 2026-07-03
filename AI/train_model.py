@@ -1,6 +1,5 @@
 """
-Window-based Random Forest s prosirenim feature setom.
-Veci prozor dajemodelu vecu sansu da uhvati kljucne dogadaje.
+Window-based Random Forest
 """
 
 import pandas as pd

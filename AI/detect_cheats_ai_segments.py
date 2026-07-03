@@ -1,21 +1,16 @@
 """
-detect_segments.py
+detect_cheats_ai_segments.py
 Segmentna varijanta skripte detect_cheats_ai.py.
-
-Koristi iskljucivo Random Forest model za odluku, jednako kao detect_cheats_ai.py. Jedina je
 razlika u nacinu sazimanja predikcija po prozorima u konacnu odluku:
 detect_cheats_ai.py : vecinsko glasanje
 konacna odluka = najcesca oznaka kroz cijeli run.
 Prikladno kad je tijekom cijele sesije isto ponasanje.
-
-detect_segments.py  : segmentna prijava
+detect_cheats_ai_segments.pyy  : segmentna prijava
 prijavljuje svaki oblik varanja koji se pojavi u barem
 MIN_CHEAT_WINDOWS prozora, bez obzira na vecinu, te ispisuje
 u kojim se vremenskim segmentima varanje javlja.
 Prikladno kad je varanje moglo biti ukljuceno samo u dijelu igre.
-
 Obje skripte koriste isti model (cheat_detector_model.pkl) i iste znacajke.
-
 Koristenje:
     python detect_segments.py <gameplay_log.csv>
 """

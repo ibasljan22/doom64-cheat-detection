@@ -1,7 +1,5 @@
 """
-detect_cheats_ai_only.py
-detekcija varanja iskljucivo pomocu Random Forest modela.
-Odluku donosi samo strojno ucenje.
+detekcija varanja pomocu Random Forest modela.
 Koristenje:
 python detect_cheats_ai_only.py <gameplay_log.csv>
 """

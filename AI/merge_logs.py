@@ -1,5 +1,4 @@
 """
-merge_logs.py (v2 - podrzava damage_attempts i shots_fired kolone)
 Spaja vise gameplay CSV datoteka u jedan file.
 Automatski dodaje kolone koje nedostaju (za kompatibilnost sa starijim logovima).
 Brise prvi red svake datoteke (zbog inicijalnog spike-a u distance_delta).
@@ -23,11 +22,11 @@ def merge_logs(input_pattern, output_file):
     dfs = []
     for f in files:
         df = pd.read_csv(f)
-        # Brisi prvi red (inicijalni spike)
+        #Brisi prvi red (inicijalni spike)
         if len(df) > 1:
             df = df.iloc[1:].reset_index(drop=True)
 
-        # Dodaj kolone ako nedostaju (kompatibilnost sa starim logovima)
+        #Dodaj kolone ako nedostaju (kompatibilnost sa starim logovima)
         for col in ['infinite_ammo', 'speedhack', 'damage_attempts', 'shots_fired']:
             if col not in df.columns:
                 df[col] = 0
@@ -36,7 +35,7 @@ def merge_logs(input_pattern, output_file):
 
     merged = pd.concat(dfs, ignore_index=True)
 
-    # Reorganiziraj kolone u smislen redoslijed
+    #Reorganiziraj kolone u smislen redoslijed
     expected_order = [
         'tick', 'health', 'armor',
         'ammo_bullets', 'ammo_shells', 'ammo_cells', 'ammo_rockets',
