@@ -1,17 +1,17 @@
-# Otkrivanje varanja u videoigri Doom 64 koristenjem metoda umjetne inteligencije
+# Otkrivanje varanja u videoigri Doom 64 korištenjem metoda umjetne inteligencije
 
-Zavrsni rad - sustav za otkrivanje odabranih oblika varanja u videoigri Doom 64
-temeljen na analizi gameplay podataka pomocu strojnog ucenja (Random Forest).
+Završni rad - sustav za otkrivanje odabranih oblika varanja u videoigri Doom 64
+temeljen na analizi gameplay podataka pomoću strojnog učenja (Random Forest).
 
 ## Opis
 
 Sustav detektira tri oblika varanja:
-- **God mode** - igrac prima napade ali ne gubi health
-- **Infinite ammo** - igrac puca ali ne trosi municiju
-- **Speed hack** - igrac se krece jako brzo, brze od default brzine u igri
+- **God mode** - igrač prima napade ali ne gubi health
+- **Infinite ammo** - igrač puca ali ne troši municiju
+- **Speed hack** - igrač se kreće jako brzo, brže od default brzine u igri
 
-Projekt je izgradjen na [Doom64EX-Plus](https://github.com/atsb/Doom64EX-Plus)
-engineu, koji je prosiren logging sustavom za prikupljanje gameplay podataka.
+Projekt je izgrađen na [Doom64EX-Plus](https://github.com/atsb/Doom64EX-Plus)
+engineu, koji je proširen logging sustavom za prikupljanje gameplay podataka.
 
 ## Struktura projekta
 
@@ -44,7 +44,7 @@ napada na igraca), shots_fired (ispaljeni hici oruzjem koje trosi ammo) itd.
 
 ```bash
 # 1. Spoji logove po kategoriji
-python merge_logs.py "data/normal/gameplay_log_*.csv" normal_gameplay.csv
+python merge_logs.py "data/test/gameplay_log_*.csv" test_gameplay.csv
 
 # 2. Pripremi dataset
 python prepare_data.py
@@ -53,20 +53,14 @@ python prepare_data.py
 python train_model.py
 
 # 4. Detektiraj varanje na snimljenom logu
-python detect_cheats.py gameplay_log_XXXXX.csv
+python detect_cheats_ai.py test_gameplay.csv ili python detect_cheats_ai_segments.py test_gameplay.csv
 
-# 5. Detekcija u stvarnom vremenu (pokrenuti prije igre)
-python realtime_monitor.py
 ```
 
 ## Metoda
 
-Sustav koristi hibridni pristup:
-1. **Random Forest klasifikator** na prozorima gameplay-a (~15 sekundi)
-2. **Session-level pravila** koja koriste tvrde signale (damage_attempts,
-   shots_fired) za pouzdano razlikovanje varanja od legitimnih edge-case
-   scenarija (npr. vjesti igrac koji ne prima damage, ili koristenje
-   chainsaw-a koji ne trosi municiju).
+1. **Random Forest klasifikator** na prozorima gameplay-a (~30 sekundi)
+
 
 ## Zahtjevi
 
