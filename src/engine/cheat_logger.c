@@ -1,6 +1,6 @@
 // cheat_logger.c
 //Logging sustav za prikupljanje gameplay podataka
-//Zapisuje CSV datoteku s podacima o igracu svaki game tick
+//Zapisuje CSV datoteku s podacima o igracu (zapis svakih 2,5 ticka)
 //Podaci se koriste za treniranje Random Forest modela
 
 #include <stdio.h>
