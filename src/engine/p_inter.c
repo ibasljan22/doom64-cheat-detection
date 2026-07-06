@@ -1079,8 +1079,8 @@ void P_DamageMobj(mobj_t* target, mobj_t* inflictor, mobj_t* source, int damage)
 
 	// player specific
 	if (player) {
-		// [thesis] broji svaki pokusaj damage-a na igraca,
-		// cak i ako ce ga god mode blokirati
+		//broji svaki pokusaj damage-a na igraca,
+		//cak i ako ce ga god mode blokirati
 		if (source && source != target) {
 			g_damageAttempts++;
 		}

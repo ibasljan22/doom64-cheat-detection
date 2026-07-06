@@ -10,7 +10,7 @@
 //Inicijalizira logger - otvara se CSV datoteka
 void CL_Init(void);
 
-//Zapisuje podatke o igracu u CSV - poziva se svaki tick
+//Zapisuje podatke o igracu u CSV 
 void CL_LogTick(player_t* player, int gametic);
 
 //Primjenjuje efekte cheatova (infinite ammo, speedhack)

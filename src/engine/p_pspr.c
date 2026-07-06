@@ -262,8 +262,8 @@ void P_FireWeapon(player_t* player) {
 		return;
 	}
 
-	// [thesis] broji ispaljene hitce samo za oruzja koja trose ammo
-	// (chainsaw i fist imaju am_noammo pa se ne broje)
+	//broji ispaljene pucnjeve samo za oruzja koja trose ammo
+	//(chainsaw i fist imaju am_noammo pa se ne broje)
 	if (weaponinfo[player->readyweapon].ammo != am_noammo) {
 		g_shotsFired++;
 	}
