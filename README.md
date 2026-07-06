@@ -40,7 +40,7 @@ provjeri); oblici infinite ammo i speed hack prepoznaju se bez pogreške.
 
 ## Prikupljeni podaci
 
-Logger svakih 5 tickova zapisuje redak s 30 stupaca: health, armor, municija
+Logger približno 12 puta u sekundi zapisuje redak s 30 stupaca: health, armor, municija
 (4 tipa), pozicija, momentum, brzina, delta vrijednosti u odnosu na prethodni
 zapis, `damage_attempts` (pokušaji nanošenja štete igraču), `shots_fired`
 (ispaljeni pucnjevi oružjem koje troši municiju) itd. Zastavice o aktivnim
@@ -49,7 +49,7 @@ koriste kao ulaz modela.
 
 ## Metoda
 
-1. Sirovi logovi dijele se na vremenske prozore od 200 tickova (~30 sekundi).
+1. Sirovi logovi dijele se na vremenske prozore od 200 tickova (~17 sekundi).
 2. Za svaki prozor izračunava se 16 ponašajnih značajki (npr. omjer ispaljenih
    pucnjeva bez pada municije, omjer primljenih napada bez pada healtha,
    maksimalna brzina i udio visokih brzina).
