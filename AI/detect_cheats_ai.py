@@ -108,6 +108,6 @@ def detect(csv_file):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Koristenje: python detect_cheats_ai_only.py <gameplay_log.csv>")
+        print("Koristenje: python detect_cheats_ai.py <gameplay_log.csv>")
         sys.exit(1)
     detect(sys.argv[1])

@@ -5,7 +5,7 @@ razlika u nacinu sazimanja predikcija po prozorima u konacnu odluku:
 detect_cheats_ai.py : vecinsko glasanje
 konacna odluka = najcesca oznaka kroz cijeli run.
 Prikladno kad je tijekom cijele sesije isto ponasanje.
-detect_cheats_ai_segments.pyy  : segmentna prijava
+detect_cheats_ai_segments.py  : segmentna prijava
 prijavljuje svaki oblik varanja koji se pojavi u barem
 MIN_CHEAT_WINDOWS prozora, bez obzira na vecinu, te ispisuje
 u kojim se vremenskim segmentima varanje javlja.
@@ -129,6 +129,6 @@ def detect(csv_file):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Koristenje: python detect_segments.py <gameplay_log.csv>")
+        print("Koristenje: python detect_cheats_ai_segments.py <gameplay_log.csv>")
         sys.exit(1)
     detect(sys.argv[1])
