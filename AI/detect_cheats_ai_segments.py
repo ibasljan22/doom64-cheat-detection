@@ -12,7 +12,7 @@ u kojim se vremenskim segmentima varanje javlja.
 Prikladno kad je varanje moglo biti ukljuceno samo u dijelu igre.
 Obje skripte koriste isti model (cheat_detector_model.pkl) i iste znacajke.
 Koristenje:
-    python detect_segments.py <gameplay_log.csv>
+    python detect_cheats_ai_segments.py <gameplay_log.csv>
 """
 import pandas as pd
 import joblib

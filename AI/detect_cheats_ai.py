@@ -1,7 +1,7 @@
 """
 detekcija varanja pomocu Random Forest modela.
 Koristenje:
-python detect_cheats_ai_only.py <gameplay_log.csv>
+python detect_cheats_ai.py <gameplay_log.csv>
 """
 
 import pandas as pd
