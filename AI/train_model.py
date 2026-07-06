@@ -15,7 +15,7 @@ from sklearn.metrics import (
 
 INPUT_FILE = 'training_dataset.csv'
 MODEL_FILE = 'cheat_detector_model.pkl'
-WINDOW_SIZE = 200  #tickova po prozoru (~30 sekundi)
+WINDOW_SIZE = 200  #zapisa po prozoru (~17 sekundi)
 
 
 def extract_window_features(chunk):
@@ -86,7 +86,7 @@ def train():
 
     df = df.sort_values(['label', 'tick']).reset_index(drop=True)
 
-    print(f"\nDijelim na prozore od {WINDOW_SIZE} tickova (~30 sek)...")
+    print(f"\nDijelim na prozore od {WINDOW_SIZE} tickova (~17 sek)...")
     windows_dfs = []
     for label in df['label'].unique():
         sub = df[df['label'] == label].copy()
