@@ -17,7 +17,7 @@ static int lastAmmo[4] = { 0, 0, 0, 0 };
 static fixed_t lastX = 0;
 static fixed_t lastY = 0;
 static fixed_t lastZ = 0;
-static int logInterval = 5;  //logiranje svakih 5 tickova (oko 7 puta/sec)
+static int logInterval = 5;  //prag brojaca; brojac raste za 2 po ticku, pa se zapis dogadja svakih 2,5 ticka (~12 zapisa/sec)
 static int tickCounter = 0;
 static int isFirstLog = 1;   //za preskakanje delta racunanja u prvom logu
 
@@ -144,12 +144,12 @@ void CL_LogTick(player_t* player, int gametic) {
         return;
     }
 
-    //Logiranje svakih N tickova za smanjenje velicine datoteke
-    tickCounter++;
+    //Logiranje svakih 2,5 ticka (brojac raste za 2, prag je 5)
+    tickCounter += 2;
     if (tickCounter < logInterval) {
         return;
     }
-    tickCounter = 0;
+    tickCounter -= logInterval;
 
     //Trenutni health
     currentHealth = player->mo->health;

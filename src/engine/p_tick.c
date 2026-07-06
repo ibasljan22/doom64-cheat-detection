@@ -442,8 +442,6 @@ int P_Ticker(void) {
 	CL_ApplyCheats(&players[consoleplayer]);
 	CL_LogTick(&players[consoleplayer], gametic);
 
-	CL_LogTick(&players[consoleplayer], gametic);
-
 	P_RunThinkers();
 	P_ScanSights();
 	P_RunMobjs();
