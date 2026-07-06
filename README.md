@@ -1,6 +1,6 @@
 # Otkrivanje varanja u videoigri Doom 64 korištenjem metoda umjetne inteligencije
 
-Završni rad — sustav za otkrivanje odabranih oblika varanja u videoigri Doom 64,
+Završni rad - sustav za otkrivanje odabranih oblika varanja u videoigri Doom 64,
 temeljen na analizi gameplay podataka pomoću strojnog učenja (Random Forest).
 
 ## Opis
@@ -8,14 +8,14 @@ temeljen na analizi gameplay podataka pomoću strojnog učenja (Random Forest).
 Sustav detektira tri oblika varanja isključivo na temelju ponašanja igrača,
 bez pristupa memoriji ili sustavu korisnika:
 
-- **God mode** — igrač prima napade, ali ne gubi health - Cheat code: iddqd
-- **Infinite ammo** — igrač puca, ali ne troši municiju - Cheat code: exi
-- **Speed hack** — igrač se kreće mnogo brže od najveće brzine predviđene igrom - Cheat code: exs
+- **God mode** - igrač prima napade, ali ne gubi health - Cheat code: iddqd
+- **Infinite ammo** - igrač puca, ali ne troši municiju - Cheat code: exi
+- **Speed hack** - igrač se kreće mnogo brže od najveće brzine predviđene igrom - Cheat code: exs
 
 Projekt je izgrađen na engineu [Doom64EX-Plus](https://github.com/atsb/Doom64EX-Plus),
 koji je proširen vlastitim logging sustavom za prikupljanje gameplay podataka.
 Model na testnom skupu postiže **93 % točnosti** (jednako i pri 5-strukoj unakrsnoj
-provjeri); oblici infinite ammo i speed hack prepoznaju se bez pogreške.
+provjeri), oblici infinite ammo i speed hack prepoznaju se bez pogreške.
 
 ## Struktura projekta
 
